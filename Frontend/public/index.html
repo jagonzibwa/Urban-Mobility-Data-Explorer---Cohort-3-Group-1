@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Urban Mobility Data Explorer</title>
     <link rel="stylesheet" href="assets/styles.css">
-    
+
+
+
+
 </head>
 <body>
     <header>
@@ -20,8 +23,29 @@
         </nav>
     </header>
 </body>
+<!-- Creating the canvases for our charts that will come form chart.js -->
+<main>
+    <body>
+    <section id="home">
+        <h2>Home</h2>
+        <p>Welcome to the Urban Mobility Data Explorer. Navigate through the sections to learn more about urban mobility trends.</p>
+    </section>
+    <section id="charts">
+        <p>Explore urban mobility data through interactive charts and visualizations.</p>
+        <canvas id="trip_density_by_hour" width="400" height="200"></canvas>
+        <canvas id="trip_duration_distribution" width="400" height="200"></canvas>
+        <canvas id="vendor_performance_comparison" width="400" height="200"></canvas>
+    </section>
+    <section id="map">
+        <h2>Map</h2>
+        <p>Interactive map showing urban mobility patterns.</p>
+        <div id="map-container" style="height: 400px; background-color: #e0e0e0;">
+            <!-- Map will be rendered here -->
+        </div>
 
 
     
-    <script src="app.js" defer></script>
+    <script src="src/app.js" defer></script>
+    </body>
+</main>
 </html>
