@@ -11,41 +11,44 @@
     <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
 </head>
-<body>
-    <header>
-        <h1>Urban Mobility Data Explorer</h1>
-        <nav>
-            <ul>
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#data">Data</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-</body>
 
 <main>
     <body>
-    <section id="home">
-        <h2>Home</h2>
-        <p>Welcome to the Urban Mobility Data Explorer. Navigate through the sections to learn more about urban mobility trends.</p>
-    </section>
-    <section id="charts">
-        <h2>Charts</h2>
-        <p>Explore urban mobility data through interactive charts and visualizations.</p>
-        <canvas id="trip_density_by_hour" width="400" height="200"></canvas>
-        <canvas id="trip_duration_distribution" width="400" height="200"></canvas>
-        <canvas id="vendor_performance_comparison" width="400" height="200"></canvas>
-    </section>
-    <section id="map">
-        <h2>Map</h2>
-        <p>Interactive map showing urban mobility patterns.</p>
-        <div id="map-container" style="height: 500px;"></div>
-    </section>
+        <header>
+            <h1>Urban Mobility Data Explorer</h1>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#data">Data</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+        <section id="home">
+            <h2>Home</h2>
+            <p>Welcome to the Urban Mobility Data Explorer. Navigate through the sections to learn more about urban mobility trends.</p>
+            <ul>
+                <li><p>Over 100000+ trips analyzed</p></li>
+                <li><p>Multiple interactive charts</p></li>
+                <li><p>Dynamic heatmap visualization</p></li>
+            </ul>
+        </section>
+        <section id="charts">
+            <h2>Charts</h2>
+            <p>Explore urban mobility data through interactive charts and visualizations.</p>
+            <canvas id="trip_density_by_hour" width="400" height="200"></canvas>
+            <canvas id="trip_duration_distribution" width="400" height="200"></canvas>
+            <canvas id="vendor_performance_comparison" width="400" height="200"></canvas>
+        </section>
+        <section id="map">
+            <h2>Map</h2>
+            <p>Interactive map showing urban mobility patterns.</p>
+            <div id="map-container" style="height: 500px;"></div>
+        </section>
 
 
-    <script src="app.js" defer></script>
+        <script src="app.js" defer></script>
     </body>
 </main>
 </html>
