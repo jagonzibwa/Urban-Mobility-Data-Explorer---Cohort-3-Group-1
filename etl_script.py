@@ -1,6 +1,7 @@
 """
 ETL Script for Urban Mobility Data Explorer
 Extracts data from CSV, Transforms it, and Loads into SQLite database
+Robust version that handles variant CSV schemas and generates location IDs
 """
 
 import pandas as pd
@@ -8,6 +9,7 @@ import sqlite3
 import os
 from datetime import datetime
 import logging
+import zlib
 
 # Configure logging
 logging.basicConfig(
@@ -36,9 +38,11 @@ class UrbanMobilityETL:
         """Establish database connection"""
         try:
             self.conn = sqlite3.connect(self.db_path)
-            logger.info(f"Connected to database: {self.db_path}")
+            # Enable foreign key support
+            self.conn.execute("PRAGMA foreign_keys = ON")
+            logger.info("Connected to database: %s", self.db_path)
         except sqlite3.Error as e:
-            logger.error(f"Database connection error: {e}")
+            logger.error("Database connection error: %s", e)
             raise
     
     def close_db(self):
@@ -48,9 +52,14 @@ class UrbanMobilityETL:
             logger.info("Database connection closed")
     
     def init_database(self):
-        """Initialize database schema from database.sql"""
+        """Initialize database schema from sqlite_schema.sql (or database.sql as fallback)"""
         try:
-            with open('database.sql', 'r') as f:
+            # Prefer SQLite-compatible schema
+            schema_file = 'sqlite_schema.sql' if os.path.exists('sqlite_schema.sql') else 'database.sql'
+            if schema_file == 'database.sql':
+                logger.warning("Using database.sql (MySQL-style); prefer sqlite_schema.sql for SQLite")
+            
+            with open(schema_file, 'r', encoding='utf-8') as f:
                 schema_sql = f.read()
             
             cursor = self.conn.cursor()
@@ -58,7 +67,7 @@ class UrbanMobilityETL:
             self.conn.commit()
             logger.info("Database schema initialized")
         except Exception as e:
-            logger.error(f"Error initializing database: {e}")
+            logger.error("Error initializing database: %s", e)
             raise
     
     def extract_data(self, chunksize=10000):
@@ -72,7 +81,7 @@ class UrbanMobilityETL:
             DataFrame chunks
         """
         try:
-            logger.info(f"Starting data extraction from {self.csv_path}")
+            logger.info("Starting data extraction from %s", self.csv_path)
             
             # Read CSV in chunks to handle large files
             for chunk_num, chunk in enumerate(pd.read_csv(
@@ -80,19 +89,19 @@ class UrbanMobilityETL:
                 chunksize=chunksize,
                 low_memory=False
             ), 1):
-                logger.info(f"Extracted chunk {chunk_num} with {len(chunk)} rows")
+                logger.info("Extracted chunk %d with %d rows", chunk_num, len(chunk))
                 yield chunk
                 
         except FileNotFoundError:
-            logger.error(f"CSV file not found: {self.csv_path}")
+            logger.error("CSV file not found: %s", self.csv_path)
             raise
         except Exception as e:
-            logger.error(f"Error extracting data: {e}")
+            logger.error("Error extracting data: %s", e)
             raise
     
     def transform_data(self, df):
         """
-        Transform and clean the data
+        Transform and clean the data - robust version that handles variant CSV schemas
         
         Args:
             df: Raw DataFrame from CSV
@@ -105,12 +114,77 @@ class UrbanMobilityETL:
         # Create a copy to avoid modifying original
         df = df.copy()
         
+        # Normalize datetime column names (handle variants)
+        datetime_mapping = {
+            'tpep_pickup_datetime': 'pickup_datetime',
+            'lpep_pickup_datetime': 'pickup_datetime',
+            'tpep_dropoff_datetime': 'dropoff_datetime',
+            'lpep_dropoff_datetime': 'dropoff_datetime',
+        }
+        df.rename(columns=datetime_mapping, inplace=True)
+        
         # Handle missing values
         df = df.dropna(subset=['pickup_datetime', 'dropoff_datetime'])
         
         # Convert datetime columns
         df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'], errors='coerce')
         df['dropoff_datetime'] = pd.to_datetime(df['dropoff_datetime'], errors='coerce')
+        
+        # Normalize vendor_id (handle variants)
+        if 'VendorID' in df.columns:
+            df['vendor_id'] = df['VendorID']
+        elif 'vendor_id' not in df.columns:
+            df['vendor_id'] = 0
+        
+        # Normalize passenger_count
+        if 'passenger_count' not in df.columns:
+            df['passenger_count'] = 1
+        df['passenger_count'] = pd.to_numeric(df['passenger_count'], errors='coerce').fillna(1).astype(int)
+        
+        # Detect coordinate columns (handle variants)
+        coord_mapping = {
+            'pickup_longitude': ['pickup_longitude', 'start_lon', 'pickup_lon'],
+            'pickup_latitude': ['pickup_latitude', 'start_lat', 'pickup_lat'],
+            'dropoff_longitude': ['dropoff_longitude', 'end_lon', 'dropoff_lon'],
+            'dropoff_latitude': ['dropoff_latitude', 'end_lat', 'dropoff_lat']
+        }
+        
+        for standard_name, variants in coord_mapping.items():
+            for variant in variants:
+                if variant in df.columns and standard_name not in df.columns:
+                    df[standard_name] = df[variant]
+                    break
+        
+        # Generate location IDs from coordinates if not present
+        def generate_location_id(lon, lat):
+            """Generate stable location ID from coordinates using CRC32"""
+            if pd.isna(lon) or pd.isna(lat):
+                return None
+            # Round to 4 decimal places (~11m precision) and hash
+            coord_str = f"{round(float(lon), 4)}_{round(float(lat), 4)}"
+            return zlib.crc32(coord_str.encode()) & 0x7FFFFFFF  # Ensure positive
+        
+        # Check if location ID columns exist, if not generate them
+        if 'pickup_location_id' not in df.columns or 'PULocationID' in df.columns:
+            if 'PULocationID' in df.columns:
+                df['pickup_location_id'] = df['PULocationID']
+            else:
+                df['pickup_location_id'] = df.apply(
+                    lambda row: generate_location_id(row.get('pickup_longitude'), row.get('pickup_latitude')),
+                    axis=1
+                )
+        
+        if 'dropoff_location_id' not in df.columns or 'DOLocationID' in df.columns:
+            if 'DOLocationID' in df.columns:
+                df['dropoff_location_id'] = df['DOLocationID']
+            else:
+                df['dropoff_location_id'] = df.apply(
+                    lambda row: generate_location_id(row.get('dropoff_longitude'), row.get('dropoff_latitude')),
+                    axis=1
+                )
+        
+        # Drop rows with missing location IDs
+        df = df.dropna(subset=['pickup_location_id', 'dropoff_location_id'])
         
         # Calculate trip duration in seconds if not present
         if 'trip_duration' not in df.columns:
@@ -125,12 +199,8 @@ class UrbanMobilityETL:
         ]
         
         # Extract and create Vendor data
-        vendors = df[['vendor_id', 'vendor_name']].drop_duplicates() \
-            if 'vendor_name' in df.columns else \
-            pd.DataFrame({'vendor_id': df['vendor_id'].unique()})
-        
-        if 'vendor_name' not in vendors.columns:
-            vendors['vendor_name'] = 'Vendor ' + vendors['vendor_id'].astype(str)
+        vendors = df[['vendor_id']].drop_duplicates()
+        vendors['vendor_name'] = 'Vendor ' + vendors['vendor_id'].astype(str)
         
         # Extract and create Location data for pickup
         pickup_locations = df[['pickup_location_id', 'pickup_longitude', 'pickup_latitude']].copy()
@@ -159,11 +229,10 @@ class UrbanMobilityETL:
         trips = df[trip_columns].copy()
         
         # Ensure passenger_count is valid
-        trips['passenger_count'] = trips['passenger_count'].fillna(1).astype(int)
         trips = trips[trips['passenger_count'] > 0]
         
-        logger.info(f"Transformation complete: {len(vendors)} vendors, "
-                   f"{len(locations)} locations, {len(trips)} trips")
+        logger.info("Transformation complete: %d vendors, %d locations, %d trips",
+                   len(vendors), len(locations), len(trips))
         
         return {
             'vendors': vendors,
@@ -181,7 +250,8 @@ class UrbanMobilityETL:
         logger.info("Starting data loading")
         cursor = self.conn.cursor()
         try:
-            cursor.execute('BEGIN TRANSACTION;')
+            cursor.execute('BEGIN TRANSACTION')
+            
             # Load Vendors
             vendors = transformed_data['vendors']
             for _, vendor in vendors.iterrows():
@@ -192,8 +262,8 @@ class UrbanMobilityETL:
                         (int(vendor['vendor_id']), vendor['vendor_name'])
                     )
                 except Exception as e:
-                    logger.warning(f"Skipping vendor {vendor['vendor_id']}: {e}")
-            logger.info(f"Loaded {len(vendors)} vendors")
+                    logger.warning("Skipping vendor %s: %s", vendor['vendor_id'], e)
+            logger.info("Loaded %d vendors", len(vendors))
 
             # Load Locations
             locations = transformed_data['locations']
@@ -207,8 +277,8 @@ class UrbanMobilityETL:
                          float(location['latitude']))
                     )
                 except Exception as e:
-                    logger.warning(f"Skipping location {location['location_id']}: {e}")
-            logger.info(f"Loaded {len(locations)} locations")
+                    logger.warning("Skipping location %s: %s", location['location_id'], e)
+            logger.info("Loaded %d locations", len(locations))
 
             # Load Trips
             trips = transformed_data['trips']
@@ -246,16 +316,16 @@ class UrbanMobilityETL:
                              int(trip['trip_duration']))
                         )
                 except Exception as e:
-                    logger.warning(f"Skipping invalid trip: {e}")
+                    logger.warning("Skipping invalid trip: %s", e)
                     continue
-            logger.info(f"Loaded {len(trips)} trips")
+            logger.info("Loaded %d trips", len(trips))
 
             # Commit all changes for this chunk
             self.conn.commit()
             logger.info("Data loading complete - all changes committed for this chunk")
         except sqlite3.Error as e:
             self.conn.rollback()
-            logger.error(f"Database error during loading: {e}")
+            logger.error("Database error during loading: %s", e)
             raise
     
     def run(self, chunksize=10000, init_db=False):
@@ -288,14 +358,14 @@ class UrbanMobilityETL:
                 self.load_data(transformed)
                 
                 total_processed += len(chunk)
-                logger.info(f"Total rows processed: {total_processed}")
+                logger.info("Total rows processed: %d", total_processed)
             
             logger.info("=" * 50)
             logger.info("ETL Pipeline Completed Successfully")
             logger.info("=" * 50)
             
         except Exception as e:
-            logger.error(f"ETL pipeline failed: {e}")
+            logger.error("ETL pipeline failed: %s", e)
             raise
         finally:
             self.close_db()
@@ -310,7 +380,7 @@ def main():
     
     # Check if CSV file exists
     if not os.path.exists(CSV_FILE):
-        logger.error(f"CSV file not found: {CSV_FILE}")
+        logger.error("CSV file not found: %s", CSV_FILE)
         logger.info("Please update the CSV_FILE path in the script")
         return
     
