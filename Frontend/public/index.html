@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Urban Mobility Data Explorer</title>
-    <link rel="stylesheet" href="assets/styles.css">
-
-
-
+    <link rel="stylesheet" href="src/assets/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
 </head>
 <body>
@@ -23,7 +24,7 @@
         </nav>
     </header>
 </body>
-<!-- Creating the canvases for our charts that will come form chart.js -->
+
 <main>
     <body>
     <section id="home">
@@ -31,6 +32,7 @@
         <p>Welcome to the Urban Mobility Data Explorer. Navigate through the sections to learn more about urban mobility trends.</p>
     </section>
     <section id="charts">
+        <h2>Charts</h2>
         <p>Explore urban mobility data through interactive charts and visualizations.</p>
         <canvas id="trip_density_by_hour" width="400" height="200"></canvas>
         <canvas id="trip_duration_distribution" width="400" height="200"></canvas>
@@ -39,13 +41,11 @@
     <section id="map">
         <h2>Map</h2>
         <p>Interactive map showing urban mobility patterns.</p>
-        <div id="map-container" style="height: 400px; background-color: #e0e0e0;">
-            <!-- Map will be rendered here -->
-        </div>
+        <div id="map-container" style="height: 500px;"></div>
+    </section>
 
 
-    
-    <script src="src/app.js" defer></script>
+    <script src="app.js" defer></script>
     </body>
 </main>
 </html>
