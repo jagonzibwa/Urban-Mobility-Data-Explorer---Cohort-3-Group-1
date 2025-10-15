@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class UrbanMobilityETL:
     """ETL pipeline for urban mobility trip data"""
     
-    def __init__(self, db_path='database.db', csv_path='data.csv'):
+    def __init__(self, db_path='database.db', csv_path='train.csv'):
         """
         Initialize ETL pipeline
         
@@ -180,30 +180,36 @@ class UrbanMobilityETL:
         """
         logger.info("Starting data loading")
         cursor = self.conn.cursor()
-        
         try:
+            cursor.execute('BEGIN TRANSACTION;')
             # Load Vendors
             vendors = transformed_data['vendors']
             for _, vendor in vendors.iterrows():
-                cursor.execute(
-                    """INSERT OR IGNORE INTO Vendor (vendor_id, vendor_name) 
-                       VALUES (?, ?)""",
-                    (int(vendor['vendor_id']), vendor['vendor_name'])
-                )
+                try:
+                    cursor.execute(
+                        """INSERT OR IGNORE INTO Vendor (vendor_id, vendor_name) 
+                           VALUES (?, ?)""",
+                        (int(vendor['vendor_id']), vendor['vendor_name'])
+                    )
+                except Exception as e:
+                    logger.warning(f"Skipping vendor {vendor['vendor_id']}: {e}")
             logger.info(f"Loaded {len(vendors)} vendors")
-            
+
             # Load Locations
             locations = transformed_data['locations']
             for _, location in locations.iterrows():
-                cursor.execute(
-                    """INSERT OR IGNORE INTO Location (location_id, longitude, latitude) 
-                       VALUES (?, ?, ?)""",
-                    (int(location['location_id']), 
-                     float(location['longitude']), 
-                     float(location['latitude']))
-                )
+                try:
+                    cursor.execute(
+                        """INSERT OR IGNORE INTO Location (location_id, longitude, latitude) 
+                           VALUES (?, ?, ?)""",
+                        (int(location['location_id']), 
+                         float(location['longitude']), 
+                         float(location['latitude']))
+                    )
+                except Exception as e:
+                    logger.warning(f"Skipping location {location['location_id']}: {e}")
             logger.info(f"Loaded {len(locations)} locations")
-            
+
             # Load Trips
             trips = transformed_data['trips']
             for _, trip in trips.iterrows():
@@ -211,10 +217,10 @@ class UrbanMobilityETL:
                     if 'store_and_fwd_flag' in trip:
                         cursor.execute(
                             """INSERT INTO Trip 
-                               (vendor_id, pickup_location_id, dropoff_location_id,
-                                pickup_datetime, dropoff_datetime, passenger_count,
-                                store_and_fwd_flag, trip_duration)
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                                   (vendor_id, pickup_location_id, dropoff_location_id,
+                                    pickup_datetime, dropoff_datetime, passenger_count,
+                                    store_and_fwd_flag, trip_duration)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                             (int(trip['vendor_id']),
                              int(trip['pickup_location_id']),
                              int(trip['dropoff_location_id']),
@@ -227,10 +233,10 @@ class UrbanMobilityETL:
                     else:
                         cursor.execute(
                             """INSERT INTO Trip 
-                               (vendor_id, pickup_location_id, dropoff_location_id,
-                                pickup_datetime, dropoff_datetime, passenger_count,
-                                trip_duration)
-                               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                                   (vendor_id, pickup_location_id, dropoff_location_id,
+                                    pickup_datetime, dropoff_datetime, passenger_count,
+                                    trip_duration)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
                             (int(trip['vendor_id']),
                              int(trip['pickup_location_id']),
                              int(trip['dropoff_location_id']),
@@ -242,13 +248,11 @@ class UrbanMobilityETL:
                 except Exception as e:
                     logger.warning(f"Skipping invalid trip: {e}")
                     continue
-            
             logger.info(f"Loaded {len(trips)} trips")
-            
-            # Commit all changes
+
+            # Commit all changes for this chunk
             self.conn.commit()
-            logger.info("Data loading complete - all changes committed")
-            
+            logger.info("Data loading complete - all changes committed for this chunk")
         except sqlite3.Error as e:
             self.conn.rollback()
             logger.error(f"Database error during loading: {e}")
@@ -300,7 +304,7 @@ class UrbanMobilityETL:
 def main():
     """Main entry point"""
     # Configuration
-    CSV_FILE = 'data.csv'  # Update this to your CSV file path
+    CSV_FILE = 'train.csv'  # Update this to your CSV file path
     DB_FILE = 'database.db'
     CHUNK_SIZE = 10000  # Adjust based on your system's memory
     
