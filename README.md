@@ -1,1 +1,13 @@
-# Urban-Mobility-Data-Explorer---Cohort-3-Group-1
+-----------------------------------------
+
+Project: Data Explorer
+
+Team: Group 1
+
+-----------------------------------------
+
+Project Description: 
+
+
+
+----------------------------------------
