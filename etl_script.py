@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class UrbanMobilityETL:
     """ETL pipeline for urban mobility trip data"""
     
-    def __init__(self, db_path='database.db', csv_path='train.csv'):
+    def __init__(self, db_path='instance/site.db', csv_path='train.csv'):
         """
         Initialize ETL pipeline
         
@@ -191,11 +191,60 @@ class UrbanMobilityETL:
             df['trip_duration'] = (
                 df['dropoff_datetime'] - df['pickup_datetime']
             ).dt.total_seconds().astype(int)
+
+        if 'trip_distance' not in df.columns:
+            # Check for variant column names
+            distance_variants = ['distance', 'trip_dist', 'total_distance']
+            for variant in distance_variants:
+                if variant in df.columns:
+                    df['trip_distance'] = df[variant]
+                    break
+            
+            # If still not found, calculate from coordinates if available
+            if 'trip_distance' not in df.columns:
+                if all(col in df.columns for col in ['pickup_longitude', 'pickup_latitude', 
+                                                    'dropoff_longitude', 'dropoff_latitude']):
+                    # Calculate haversine distance
+                    from math import radians, sin, cos, sqrt, atan2
+                    
+                    def haversine_distance(lat1, lon1, lat2, lon2):
+                        """Calculate distance in miles between two coordinates"""
+                        if pd.isna(lat1) or pd.isna(lon1) or pd.isna(lat2) or pd.isna(lon2):
+                            return None
+                        
+                        R = 3959.87433  # Earth's radius in miles
+                        
+                        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+                        dlat = lat2 - lat1
+                        dlon = lon2 - lon1
+                        
+                        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                        c = 2 * atan2(sqrt(a), sqrt(1-a))
+                        
+                        return R * c
+                    
+                    df['trip_distance'] = df.apply(
+                        lambda row: haversine_distance(
+                            row.get('pickup_latitude'), row.get('pickup_longitude'),
+                            row.get('dropoff_latitude'), row.get('dropoff_longitude')
+                        ),
+                        axis=1
+                    )
+                else:
+                    # Default to 0 if no way to calculate (this might not be ideal)
+                    logger.warning("trip_distance column missing and cannot be calculated. Using default value of 0.")
+                    df['trip_distance'] = 0.0
+
+        # Ensure trip_distance is numeric and handle missing values
+        df['trip_distance'] = pd.to_numeric(df['trip_distance'], errors='coerce').fillna(0.0)
+
         
         # Remove invalid trips (negative duration or too long)
         df = df[
             (df['trip_duration'] > 0) & 
-            (df['trip_duration'] < 86400)  # Less than 24 hours
+            (df['trip_duration'] < 86400) &  # Less than 24 hours
+            (df['trip_distance'] >= 0) &
+            (df['trip_distance'] < 500)
         ]
         
         # Extract and create Vendor data
@@ -219,7 +268,7 @@ class UrbanMobilityETL:
         trip_columns = [
             'vendor_id', 'pickup_location_id', 'dropoff_location_id',
             'pickup_datetime', 'dropoff_datetime', 'passenger_count',
-            'trip_duration'
+            'trip_duration', 'trip_distance'
         ]
         
         # Add optional column if exists
@@ -289,8 +338,8 @@ class UrbanMobilityETL:
                             """INSERT INTO Trip 
                                    (vendor_id, pickup_location_id, dropoff_location_id,
                                     pickup_datetime, dropoff_datetime, passenger_count,
-                                    store_and_fwd_flag, trip_duration)
-                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                                    store_and_fwd_flag, trip_duration, trip_distance)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                             (int(trip['vendor_id']),
                              int(trip['pickup_location_id']),
                              int(trip['dropoff_location_id']),
@@ -298,22 +347,24 @@ class UrbanMobilityETL:
                              trip['dropoff_datetime'].strftime('%Y-%m-%d %H:%M:%S'),
                              int(trip['passenger_count']),
                              trip['store_and_fwd_flag'],
-                             int(trip['trip_duration']))
+                             int(trip['trip_duration']),
+                             float(trip['trip_distance']))
                         )
                     else:
                         cursor.execute(
                             """INSERT INTO Trip 
                                    (vendor_id, pickup_location_id, dropoff_location_id,
                                     pickup_datetime, dropoff_datetime, passenger_count,
-                                    trip_duration)
-                                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                                    trip_duration, trip_distance)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                             (int(trip['vendor_id']),
                              int(trip['pickup_location_id']),
                              int(trip['dropoff_location_id']),
                              trip['pickup_datetime'].strftime('%Y-%m-%d %H:%M:%S'),
                              trip['dropoff_datetime'].strftime('%Y-%m-%d %H:%M:%S'),
                              int(trip['passenger_count']),
-                             int(trip['trip_duration']))
+                             int(trip['trip_duration']),
+                             float(trip['trip_distance']))
                         )
                 except Exception as e:
                     logger.warning("Skipping invalid trip: %s", e)
