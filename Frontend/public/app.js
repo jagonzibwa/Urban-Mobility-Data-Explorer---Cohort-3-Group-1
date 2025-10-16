@@ -1,4 +1,5 @@
 // Trip Density by Hour
+//updating the chart to get data from the backend
 const ctx1 = document.getElementById('trip_density_by_hour').getContext('2d');
 new Chart(ctx1, {
   type: 'line',
@@ -115,3 +116,6 @@ const map = L.map('map-container').setView([40.7128, -74.0060], 12); // Centered
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
+
+//adding the heatmap layer
+let heatlayer = L.heatLayer([], {radius: 25}).addTo(map);
