@@ -18,9 +18,10 @@ class User(db.Model, UserMixin):
 
 class Location(db.Model):
     location_id = db.Column(db.Integer, primary_key=True)
-    latitude = db.Column(db.Float, nullable=False)
+    
     longitude = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    latitude = db.Column(db.Float, nullable=False)
+    # created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
 
     __table_args__ = (
         CheckConstraint('longitude >= -180 AND longitude <= 180', name='check_longitude_range'),
@@ -40,7 +41,7 @@ class Location(db.Model):
 class Vendor(db.Model):
     vendor_id = db.Column(db.Integer, primary_key=True)
     vendor_name = db.Column(db.String(100), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    # created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
 
     def __repr__(self):
         return f"Vendor('{self.vendor_name}')"
@@ -53,11 +54,12 @@ class Trip(db.Model):
     pickup_datetime = db.Column(db.DateTime, nullable=False)
     dropoff_datetime = db.Column(db.DateTime, nullable=False)
     passenger_count = db.Column(db.Integer, nullable=False)
-    trip_distance = db.Column(db.Float, nullable=False)
+    
     store_and_fwd_flag = db.Column(db.String(1), nullable=False)
-    fare_amount = db.Column(db.Float, nullable=False)
+    # fare_amount = db.Column(db.Float, nullable=False)
     trip_duration = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    trip_distance = db.Column(db.Float, nullable=False)
+    # created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
 
     __table_args__ = (
         CheckConstraint('passenger_count >= 0', name='check_passenger_count'),

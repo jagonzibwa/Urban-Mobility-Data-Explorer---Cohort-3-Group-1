@@ -410,6 +410,17 @@ class UrbanMobilityETL:
                 
                 total_processed += len(chunk)
                 logger.info("Total rows processed: %d", total_processed)
+
+            # For testing, only process one chunk
+            # for i, chunk in enumerate(self.extract_data(chunksize)):
+            #     transformed = self.transform_data(chunk)
+            #     self.load_data(transformed)
+            #     total_processed += len(chunk)
+            #     logger.info("Total rows processed: %d", total_processed)
+
+            #     # Stop after the first chunk (for testing)
+            #     if i == 0:
+            #         break
             
             logger.info("=" * 50)
             logger.info("ETL Pipeline Completed Successfully")
@@ -426,8 +437,9 @@ def main():
     """Main entry point"""
     # Configuration
     CSV_FILE = 'train.csv'  # Update this to your CSV file path
-    DB_FILE = 'database.db'
+    DB_FILE = 'instance/site.db'
     CHUNK_SIZE = 10000  # Adjust based on your system's memory
+    # CHUNK_SIZE = 100
     
     # Check if CSV file exists
     if not os.path.exists(CSV_FILE):
@@ -437,7 +449,7 @@ def main():
     
     # Create and run ETL pipeline
     etl = UrbanMobilityETL(db_path=DB_FILE, csv_path=CSV_FILE)
-    etl.run(chunksize=CHUNK_SIZE, init_db=True)
+    etl.run(chunksize=CHUNK_SIZE, init_db=False)
 
 
 if __name__ == '__main__':
