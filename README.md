@@ -12,6 +12,11 @@ Project Description:
 
 ----------------------------------------
 
+## Initialise Database
+
+```bash
+python3 run.py
+```
 
 ## User Creation
 
@@ -94,7 +99,7 @@ Urban-Mobility-Data-Explorer---Cohort-3-Group-1/
 └── README.md                   # This file
 ```
 
-## 🔄 ETL Pipeline
+## ETL Pipeline
 
 The ETL (Extract, Transform, Load) pipeline is designed to handle various urban mobility data formats.
 
@@ -134,7 +139,7 @@ The pipeline automatically detects and handles:
 - `pickup_location_id`, `PULocationID` (or auto-generated)
 - `dropoff_location_id`, `DOLocationID` (or auto-generated)
 
-## 🌐 API Documentation
+## API Documentation
 
 ### Core Endpoints
 
@@ -185,7 +190,7 @@ GET /api/heatmap?type={location_type}
 }
 ```
 
-## 🎨 Frontend Features
+## Frontend Features
 
 ### Interactive Charts
 
@@ -220,7 +225,7 @@ Real-time metrics displayed on the home page:
 - Average speed
 - Average fare per km
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -255,7 +260,7 @@ Update API endpoints in `Frontend/public/app.js` if needed:
 const API_BASE_URL = 'http://localhost:5000';
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -328,7 +333,7 @@ set FLASK_DEBUG=1     # Windows
 python3 run.py
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
@@ -354,11 +359,11 @@ black .
 flake8 .
 ```
 
-## 📄 License
+## License
 
 This project is part of a cohort learning program. Please respect the educational context and use appropriately.
 
-## 🆘 Support
+## Support
 
 For issues or questions:
 
@@ -367,19 +372,17 @@ For issues or questions:
 3. Check the browser console for frontend errors
 4. Examine Flask application logs
 
-## 🎯 Project Goals
+## Project Goals
 
 This Urban Mobility Data Explorer demonstrates:
 
 - **Full-stack Development**: Flask backend with modern frontend
 - **Data Processing**: Robust ETL pipeline with error handling
 - **API Design**: RESTful endpoints with proper error responses
-- **Visualization**: Interactive charts and geographic mapping
+- **Visualisation**: Interactive charts and geographic mapping
 - **User Experience**: Responsive design with real-time updates
 - **Production Readiness**: Proper configuration and deployment considerations
 
 ---
-
-**Happy Analyzing! 🚗📊**
 
  
