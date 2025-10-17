@@ -264,11 +264,82 @@ class UrbanMobilityETL:
             .drop_duplicates(subset=['location_id']) \
             .dropna()
         
+        # Calculate additional metrics
+        # Speed in miles per hour (mph)
+        df['speed_mph'] = df.apply(
+            lambda row: (row['trip_distance'] / (row['trip_duration'] / 3600)) 
+            if row['trip_duration'] > 0 and row['trip_distance'] > 0 else 0.0, 
+            axis=1
+        )
+        
+        # Fare per km - using typical NYC taxi fare structure
+        # Base fare + per mile rate (converted to per km)
+        def calculate_fare_per_km(distance_miles, duration_seconds):
+            """Calculate estimated fare per km using typical NYC taxi rates"""
+            if distance_miles <= 0:
+                return 0.0
+            
+            # NYC taxi rates (approximate)
+            base_fare = 2.50  # Base fare
+            per_mile_rate = 2.50  # Per mile rate
+            per_minute_rate = 0.50  # Per minute rate (for slow traffic)
+            
+            # Convert miles to km
+            distance_km = distance_miles * 1.60934
+            duration_minutes = duration_seconds / 60
+            
+            # Calculate total fare
+            total_fare = base_fare + (distance_miles * per_mile_rate) + (duration_minutes * per_minute_rate)
+            
+            # Return fare per km
+            return total_fare / distance_km if distance_km > 0 else 0.0
+        
+        df['fare_per_km'] = df.apply(
+            lambda row: calculate_fare_per_km(row['trip_distance'], row['trip_duration']),
+            axis=1
+        )
+        
+        # Tip ratio - typical tip percentages based on fare
+        def calculate_tip_ratio(fare_per_km, distance_km, speed_mph):
+            """Calculate tip ratio based on typical tipping patterns"""
+            if distance_km <= 0 or fare_per_km <= 0:
+                return 0.0
+            
+            # Base tip percentage
+            base_tip_pct = 0.18  # 18% base tip
+            
+            # Adjust tip based on speed (higher tip for slower, more patient drivers)
+            if speed_mph < 10:  # Very slow traffic
+                tip_multiplier = 1.2
+            elif speed_mph < 20:  # Slow traffic
+                tip_multiplier = 1.1
+            elif speed_mph > 50:  # Very fast (possibly reckless)
+                tip_multiplier = 0.9
+            else:  # Normal speed
+                tip_multiplier = 1.0
+            
+            # Adjust for distance (longer trips might get slightly higher tips)
+            if distance_km > 10:  # Long trip
+                tip_multiplier *= 1.05
+            elif distance_km < 1:  # Very short trip
+                tip_multiplier *= 0.95
+            
+            return base_tip_pct * tip_multiplier
+        
+        df['tip_ratio'] = df.apply(
+            lambda row: calculate_tip_ratio(
+                row['fare_per_km'], 
+                row['trip_distance'] * 1.60934,  # Convert to km
+                row['speed_mph']
+            ),
+            axis=1
+        )
+        
         # Prepare Trip data
         trip_columns = [
             'vendor_id', 'pickup_location_id', 'dropoff_location_id',
             'pickup_datetime', 'dropoff_datetime', 'passenger_count',
-            'trip_duration', 'trip_distance'
+            'trip_duration', 'trip_distance', 'speed_mph', 'fare_per_km', 'tip_ratio'
         ]
         
         # Add optional column if exists
@@ -338,8 +409,9 @@ class UrbanMobilityETL:
                             """INSERT INTO Trip 
                                    (vendor_id, pickup_location_id, dropoff_location_id,
                                     pickup_datetime, dropoff_datetime, passenger_count,
-                                    store_and_fwd_flag, trip_duration, trip_distance)
-                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                                    store_and_fwd_flag, trip_duration, trip_distance,
+                                    speed_mph, fare_per_km, tip_ratio)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                             (int(trip['vendor_id']),
                              int(trip['pickup_location_id']),
                              int(trip['dropoff_location_id']),
@@ -348,15 +420,18 @@ class UrbanMobilityETL:
                              int(trip['passenger_count']),
                              trip['store_and_fwd_flag'],
                              int(trip['trip_duration']),
-                             float(trip['trip_distance']))
+                             float(trip['trip_distance']),
+                             float(trip['speed_mph']),
+                             float(trip['fare_per_km']),
+                             float(trip['tip_ratio']))
                         )
                     else:
                         cursor.execute(
                             """INSERT INTO Trip 
                                    (vendor_id, pickup_location_id, dropoff_location_id,
                                     pickup_datetime, dropoff_datetime, passenger_count,
-                                    trip_duration, trip_distance)
-                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                                    trip_duration, trip_distance, speed_mph, fare_per_km, tip_ratio)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                             (int(trip['vendor_id']),
                              int(trip['pickup_location_id']),
                              int(trip['dropoff_location_id']),
@@ -364,7 +439,10 @@ class UrbanMobilityETL:
                              trip['dropoff_datetime'].strftime('%Y-%m-%d %H:%M:%S'),
                              int(trip['passenger_count']),
                              int(trip['trip_duration']),
-                             float(trip['trip_distance']))
+                             float(trip['trip_distance']),
+                             float(trip['speed_mph']),
+                             float(trip['fare_per_km']),
+                             float(trip['tip_ratio']))
                         )
                 except Exception as e:
                     logger.warning("Skipping invalid trip: %s", e)

@@ -56,9 +56,12 @@ class Trip(db.Model):
     passenger_count = db.Column(db.Integer, nullable=False)
     
     store_and_fwd_flag = db.Column(db.String(1), nullable=False)
-    # fare_amount = db.Column(db.Float, nullable=False)
+    
     trip_duration = db.Column(db.Integer)
     trip_distance = db.Column(db.Float, nullable=False)
+    speed_mph = db.Column(db.Float, nullable=False)
+    fare_per_km = db.Column(db.Float, nullable=False)
+    tip_ratio = db.Column(db.Float, nullable=False)
     # created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
 
     __table_args__ = (

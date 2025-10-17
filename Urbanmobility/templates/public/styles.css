@@ -1,0 +1,89 @@
+/*Adding font to the body*/
+body {
+     font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #2d2038;
+}
+
+/*Styling the header*/
+header {
+    background-color: #2d2038;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+}
+
+/*Styling the navigation bar*/
+nav ul {
+    list-style: none;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    background-color: #f4f4f4;
+    width: fit-content;
+    margin: 0 auto;  
+}
+
+nav ul li a {
+    text-decoration: none;
+}
+
+/*Styling home section*/
+#home {
+    padding: 20px;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 0, 0);
+    margin: 20px auto;
+    border-radius: 10px;
+    width: 90%;
+}
+
+/*Styling the ul inside the home section*/
+#home ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+#home ul li {
+    background-color: #231430;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+/*Styling the charts section*/
+#charts {
+    padding: 20px;
+    margin: 20px auto;
+    background-color: rgb(0, 0, 0);
+    color:#f4f4f4;
+    border-radius: 10px;
+    width: 90%;
+}
+
+#charts canvas {
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+    background-color: rgb(255, 255, 255);
+}
+
+/*Styling the map section*/
+#map {
+    padding: 20px;
+    margin: 20px auto;
+    content: center;
+    background-color: rgb(0, 0, 0);
+    color:#f4f4f4;
+    border-radius: 10px;
+    width: 90%;
+
+}

@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS Trip (
     passenger_count INTEGER NOT NULL,
     store_and_fwd_flag TEXT,
     trip_duration INTEGER NOT NULL,
+    trip_distance REAL,
+    speed_mph REAL,
+    fare_per_km REAL,
+    tip_ratio REAL,
     FOREIGN KEY (vendor_id) REFERENCES Vendor(vendor_id),
     FOREIGN KEY (pickup_location_id) REFERENCES Location(location_id),
     FOREIGN KEY (dropoff_location_id) REFERENCES Location(location_id)
