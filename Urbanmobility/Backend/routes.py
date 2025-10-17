@@ -14,10 +14,13 @@ from datetime import datetime
 
 DB_PATH = 'instance/site.db'
 
-# Load JSON 
+# Load JSON (optional; don't fail if missing)
 json_path = os.path.join(os.path.dirname(__file__), '..', '..', 'instance', 'urban_mobility_data.json')
-with open(json_path, 'r') as f:
-    mobility_data = json.load(f)
+try:
+    with open(json_path, 'r') as f:
+        mobility_data = json.load(f)
+except FileNotFoundError:
+    mobility_data = {}
 
 
 def query_db(query, args=(), one=False):

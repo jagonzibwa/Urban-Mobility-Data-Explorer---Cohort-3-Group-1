@@ -42,13 +42,13 @@ updateHourChart(); // initial load
 // Trip Duration Distribution
 const ctx = document.getElementById('trip_duration_distribution').getContext('2d');
 
-new Chart(ctx, {
+const durationChart = new Chart(ctx, {
   type: 'bar',
   data: {
-    labels: ['0–5 min', '5–10 min', '10–15 min', '15–20 min', '20–30 min', '30+ min'], // duration bins
+    labels: [],
     datasets: [{
       label: 'Trip Count',
-      data: [150, 300, 250, 200, 100, 50], // frequency per bin
+      data: [],
       backgroundColor: 'rgba(255, 159, 64, 0.6)',
       borderColor: 'rgba(255, 159, 64, 1)',
       borderWidth: 1
@@ -96,15 +96,29 @@ new Chart(ctx, {
   }
 });
 
+function updateDurationChart(passenger = 'all') {
+  const param = passenger === '3' ? '3+' : passenger;
+  fetch(`/api/chart/duration_distribution?passenger=${encodeURIComponent(param)}`)
+    .then(res => res.json())
+    .then(data => {
+      durationChart.data.labels = data.labels;
+      durationChart.data.datasets[0].data = data.data;
+      durationChart.update();
+    })
+    .catch(() => {});
+}
+
+updateDurationChart();
+
 // Vendor Performance Comparison
 const ctx3 = document.getElementById('vendor_performance_comparison').getContext('2d');
-new Chart(ctx3, {
+const vendorChart = new Chart(ctx3, {
   type: 'bar',
   data: {
-    labels: ['Vendor A', 'Vendor B'],
+    labels: [],
     datasets: [{
       label: 'Average Fare per KM',
-      data: [2.5, 3.1],
+      data: [],
       backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)'],
       borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
       borderWidth: 1
@@ -126,6 +140,19 @@ new Chart(ctx3, {
   }
 });
 
+function updateVendorChart(vendor = 'all') {
+  fetch(`/api/chart/vendor_performance?vendor=${encodeURIComponent(vendor)}`)
+    .then(res => res.json())
+    .then(data => {
+      vendorChart.data.labels = data.labels;
+      vendorChart.data.datasets[0].data = data.data;
+      vendorChart.update();
+    })
+    .catch(() => {});
+}
+
+updateVendorChart();
+
 //Rendering the map
 const map = L.map('map-container').setView([40.7128, -74.0060], 12); // Centered on New York City
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -134,3 +161,38 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 //adding the heatmap layer
 let heatlayer = L.heatLayer([], {radius: 25}).addTo(map);
+
+function updateHeatmap(type = 'pickup') {
+  fetch(`/api/heatmap?type=${encodeURIComponent(type)}`)
+    .then(res => res.json())
+    .then(points => {
+      // points is array of [lat, lng, intensity]
+      heatlayer.setLatLngs(points);
+    })
+    .catch(() => {});
+}
+
+updateHeatmap('pickup');
+
+// Hook up UI filters after DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  const hourFilter = document.getElementById('filter-hour');
+  if (hourFilter) {
+    hourFilter.addEventListener('change', e => updateHourChart(e.target.value));
+  }
+
+  const durationFilter = document.getElementById('filter-duration');
+  if (durationFilter) {
+    durationFilter.addEventListener('change', e => updateDurationChart(e.target.value));
+  }
+
+  const vendorFilter = document.getElementById('filter-vendor');
+  if (vendorFilter) {
+    vendorFilter.addEventListener('change', e => updateVendorChart(e.target.value));
+  }
+
+  const mapType = document.getElementById('map-type');
+  if (mapType) {
+    mapType.addEventListener('change', e => updateHeatmap(e.target.value));
+  }
+});
