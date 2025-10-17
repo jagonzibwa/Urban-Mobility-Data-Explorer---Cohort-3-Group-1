@@ -24,13 +24,13 @@ flask create-admin
 ### For Windows (PowerShell):
 ```powershell
 $env:FLASK_APP = "Urbanmobility.Backend"
-flask create-admin
+python -m flask create-admin
 ```
 
 ### For Windows (CMD):
 ```cmd
 set FLASK_APP=Urbanmobility.Backend
-flask create-admin
+python -m flask create-admin
 ```
 
 

@@ -1,3 +1,45 @@
-instance/site.db
-.vscode/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Flask
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files
+*.csv
+train/
+*.log
+
+# Environment
+.env
+.flaskenv
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Build files
+*.pyc

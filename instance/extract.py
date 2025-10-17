@@ -2,9 +2,10 @@ import sqlite3
 import json
 import os
 
-# Use the database file located in the same directory as this script (instance/site.db)
-DB_PATH = os.path.join(os.path.dirname(__file__), 'instance/site.db')
-OUTPUT_FILE = 'urban_mobility_data.json'
+# Database file is in the same directory as this script (instance/site.db)
+# Since this script is in the instance folder, we just need 'site.db'
+DB_PATH = os.path.join(os.path.dirname(__file__), 'site.db')
+OUTPUT_FILE = os.path.join(os.path.dirname(__file__), 'urban_mobility_data.json')
 
 def fetch_table(conn, table_name):
     conn.row_factory = sqlite3.Row

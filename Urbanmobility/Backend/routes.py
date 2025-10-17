@@ -4,7 +4,12 @@ from Urbanmobility.Backend.forms import LoginForm
 from flask_login import login_user, current_user, logout_user, login_required
 
 from Urbanmobility.Backend.models import User,Location,Vendor,Trip
-from Urbanmobility.Backend.utils import merge_sort, detect_anomalies_zscore
+from Urbanmobility.Backend.utils import (
+    find_top_k, 
+    detect_outliers_iqr, 
+    calculate_percentile,
+    SlidingWindow
+)
 
 import json
 import os
@@ -185,19 +190,19 @@ def vendor_performance():
         vendor_stats[vendor_id]['total_distance'] += float(row['trip_distance'])
         vendor_stats[vendor_id]['avg_speed'] += float(row['speed_mph'])
 
-    # Calculate averages and sort descending by avg fare_per_km using manual merge sort
-    vendor_pairs = []  # (name, avg_fare)
+    # Calculate averages and prepare for top-k selection
+    vendor_pairs = []  # (avg_fare, name)
     for _, stats in vendor_stats.items():
         if stats['count'] > 0:
             avg_fare = round(stats['fare_per_km_sum'] / stats['count'], 2)
-            vendor_pairs.append((stats['name'], avg_fare))
+            vendor_pairs.append((avg_fare, stats['name']))  # (value, name) for top-k
 
-    # Sort ascending by avg_fare then reverse for descending
-    vendor_pairs = list(reversed(merge_sort(vendor_pairs, key=lambda p: p[1])))
+    # Use custom top-k algorithm to find highest performing vendors
+    top_vendors = find_top_k(vendor_pairs, k=len(vendor_pairs))  # Get all, sorted descending
 
     return jsonify({
-        'labels': [name for name, _ in vendor_pairs],
-        'data': [avg for _, avg in vendor_pairs]
+        'labels': [name for _, name in top_vendors],
+        'data': [avg for avg, _ in top_vendors]
     })
 
 @app.route('/api/heatmap')
@@ -249,23 +254,52 @@ def stats_summary():
 
 @app.route('/api/anomalies/speed')
 def anomalies_speed():
-    """Detect speed anomalies using manual z-score (no numpy/pandas)."""
-    try:
-        z = float(request.args.get('z', '3.0'))
-    except ValueError:
-        z = 3.0
-
+    """Detect speed anomalies using IQR method (no numpy/pandas)."""
+    
     rows = query_db("SELECT speed_mph FROM Trip WHERE speed_mph > 0")
     speeds = [float(r['speed_mph']) for r in rows]
-    anomalies = detect_anomalies_zscore(speeds, z_threshold=z)
-    # anomalies: list of (index, value, z)
-    top = anomalies[:100]
+    
+    # Use IQR-based outlier detection instead of z-score
+    outliers = detect_outliers_iqr(speeds)
+    
     return jsonify({
-        'count': len(anomalies),
-        'z_threshold': z,
+        'count': len(outliers),
+        'method': 'IQR (Interquartile Range)',
         'examples': [
-            {'index': idx, 'speed_mph': val, 'z': round(zv, 3)} for idx, val, zv in top
+            {'index': idx, 'speed_mph': round(val, 2)} 
+            for idx, val in outliers[:100]
         ]
     })
+
+
+@app.route('/api/stats/percentile')
+def percentile_stats():
+    """Calculate percentile statistics using QuickSelect algorithm."""
+    try:
+        field = request.args.get('field', 'trip_duration')
+        percentile = int(request.args.get('p', '95'))
+        
+        valid_fields = ['trip_duration', 'trip_distance', 'speed_mph']
+        if field not in valid_fields:
+            return jsonify({'error': 'Invalid field'}), 400
+        
+        query = f"SELECT {field} FROM Trip WHERE {field} > 0"
+        rows = query_db(query)
+        values = [float(r[field]) for r in rows]
+        
+        if not values:
+            return jsonify({'error': 'No data'}), 404
+        
+        # Calculate percentile using custom QuickSelect algorithm
+        p_value = calculate_percentile(values, percentile)
+        
+        return jsonify({
+            'field': field,
+            'percentile': percentile,
+            'value': round(p_value, 2),
+            'sample_size': len(values)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
     
