@@ -1,9 +1,36 @@
-pandas>=2.0.0
+# Core Flask packages
 flask>=2.0.0
-flask-wtf>=1.0.0
-wtforms>=3.0.0
 flask-sqlalchemy>=3.0.0
-sqlalchemy>=2.0.0
-flask-migrate>=4.0.0
 flask-login>=0.6.0
 flask-bcrypt>=1.0.0
+flask-wtf>=1.0.0
+flask-restful>=0.3.10
+flask-migrate>=4.0.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.22.0
+
+# Database
+sqlalchemy>=2.0.0
+
+# Forms and validation
+wtforms>=3.0.0
+
+# Testing and development
+requests>=2.25.0
+
+# Standard library dependencies (automatically included)
+# - json
+# - os
+# - sqlite3
+# - datetime
+# - collections
+# - logging
+# - zlib
+# - click
+# - blinker
+# - itsdangerous
+# - jinja2
+# - markupsafe
+# - werkzeug
