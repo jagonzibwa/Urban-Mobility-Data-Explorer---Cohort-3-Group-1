@@ -4,6 +4,7 @@ from Urbanmobility.Backend.forms import LoginForm
 from flask_login import login_user, current_user, logout_user, login_required
 
 from Urbanmobility.Backend.models import User,Location,Vendor,Trip
+from Urbanmobility.Backend.utils import merge_sort, detect_anomalies_zscore
 
 import json
 import os
@@ -184,17 +185,19 @@ def vendor_performance():
         vendor_stats[vendor_id]['total_distance'] += float(row['trip_distance'])
         vendor_stats[vendor_id]['avg_speed'] += float(row['speed_mph'])
 
-    # Calculate averages
-    labels = []
-    fare_data = []
-    for vendor_id, stats in vendor_stats.items():
+    # Calculate averages and sort descending by avg fare_per_km using manual merge sort
+    vendor_pairs = []  # (name, avg_fare)
+    for _, stats in vendor_stats.items():
         if stats['count'] > 0:
-            labels.append(stats['name'])
-            fare_data.append(round(stats['fare_per_km_sum'] / stats['count'], 2))
+            avg_fare = round(stats['fare_per_km_sum'] / stats['count'], 2)
+            vendor_pairs.append((stats['name'], avg_fare))
+
+    # Sort ascending by avg_fare then reverse for descending
+    vendor_pairs = list(reversed(merge_sort(vendor_pairs, key=lambda p: p[1])))
 
     return jsonify({
-        'labels': labels,
-        'data': fare_data
+        'labels': [name for name, _ in vendor_pairs],
+        'data': [avg for _, avg in vendor_pairs]
     })
 
 @app.route('/api/heatmap')
@@ -242,5 +245,27 @@ def stats_summary():
             stats[key] = round(result['count'] if 'count' in result else result['avg'], 2)
     
     return jsonify(stats)
+
+
+@app.route('/api/anomalies/speed')
+def anomalies_speed():
+    """Detect speed anomalies using manual z-score (no numpy/pandas)."""
+    try:
+        z = float(request.args.get('z', '3.0'))
+    except ValueError:
+        z = 3.0
+
+    rows = query_db("SELECT speed_mph FROM Trip WHERE speed_mph > 0")
+    speeds = [float(r['speed_mph']) for r in rows]
+    anomalies = detect_anomalies_zscore(speeds, z_threshold=z)
+    # anomalies: list of (index, value, z)
+    top = anomalies[:100]
+    return jsonify({
+        'count': len(anomalies),
+        'z_threshold': z,
+        'examples': [
+            {'index': idx, 'speed_mph': val, 'z': round(zv, 3)} for idx, val, zv in top
+        ]
+    })
 
     
