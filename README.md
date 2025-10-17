@@ -141,7 +141,7 @@ python3 run.py
 - **Login Page**: http://localhost:5000/
 - **API Documentation**: http://localhost:5000/api/stats/summary
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Urban-Mobility-Data-Explorer---Cohort-3-Group-1/
@@ -158,7 +158,7 @@ Urban-Mobility-Data-Explorer---Cohort-3-Group-1/
 │   │   ├── routes.py             # API endpoints
 │   │   └── forms.py              # Form definitions
 │   └── 📁 templates/             # Jinja2 templates
-├── 📁 instance/                   # Database and runtime files
+├── 📁 instance/                  # Database and runtime files
 │   ├── site.db                   # SQLite database
 │   ├── extract.py               # Data export utility
 │   └── urban_mobility_data.json # JSON data export
