@@ -31,10 +31,8 @@ flask create-admin
 ```cmd
 set FLASK_APP=Urbanmobility.Backend
 flask create-admin
-# Follow prompts to create your admin account
 ```
 
-### 2. Prepare Your Data
 
 Place your CSV file in the project root and name it `train.csv`, or update the path in `etl_script.py`.
 
@@ -384,4 +382,4 @@ This Urban Mobility Data Explorer demonstrates:
 
 **Happy Analyzing! 🚗📊**
 
-
+ 
