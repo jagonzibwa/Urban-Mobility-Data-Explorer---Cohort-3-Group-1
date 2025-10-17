@@ -1,5 +1,6 @@
 import click
 from flask import Flask
+from flask_restful import Api, Resource
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
@@ -9,6 +10,7 @@ template_dir = os.path.join(os.path.dirname(__file__), '..', 'templates')
 static_dir = os.path.join(template_dir, 'public')
 
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+api = Api(app)
 
 
 SECRET_KEY = os.urandom(32)
@@ -27,6 +29,20 @@ from Urbanmobility.Backend import routes
 with app.app_context():
     db.create_all()
     print("Database tables created successfully!")
+
+
+# names = {
+#     "John": {"age": 20, "gender": "male"},
+#     "Jane": {"age": 21, "gender": "female"},
+#     "Jim": {"age": 22, "gender": "male"},
+# }
+# class HelloWorld(Resource):
+#     def get(self, name):
+#         return names[name]
+
+# api.add_resource(HelloWorld, '/helloworld/<string:name>')
+
+
 
 @app.cli.command()
 @click.option('--username', default='admin', help='The username for the admin user')
