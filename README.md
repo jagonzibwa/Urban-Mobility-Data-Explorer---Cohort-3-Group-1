@@ -1,4 +1,4 @@
-# 🚕 Urban Mobility Data Explorer
+# Urban Mobility Data Explorer
 
 **Team:** Cohort 3 - Group 1
 
@@ -6,7 +6,7 @@
 
 ---
 
-## 📋 Project Description
+## Project Description
 
 The **Urban Mobility Data Explorer** is a comprehensive full-stack web application designed to analyze and visualize urban transportation patterns using NYC Taxi trip data. This project demonstrates enterprise-level web development practices, combining robust backend processing with interactive frontend visualizations to deliver actionable insights into urban mobility trends.
 
@@ -73,7 +73,7 @@ This application serves multiple stakeholders:
 ### Demo
 
 Watch our comprehensive demo showcasing all features:
-**[🎥 View Demo on YouTube](https://youtu.be/_hH4Wj6GL3s)**
+**[View Demo on YouTube](https://youtu.be/_hH4Wj6GL3s)**
 
 ---
 
@@ -139,24 +139,24 @@ python3 run.py
 
 ```
 Urban-Mobility-Data-Explorer---Cohort-3-Group-1/
-├── 📁 Frontend/                    # Frontend assets
-│   ├── 📁 public/                  # Static files
+├── Frontend/                    # Frontend assets
+│   ├── public/                  # Static files
 │   │   ├── index.html             # Main dashboard
 │   │   ├── app.js                 # Frontend JavaScript
 │   │   └── styles.css             # Styling
-│   └── 📁 src/                    # Source components
-├── 📁 Urbanmobility/              # Backend Flask application
-│   ├── 📁 Backend/                # Core backend
+│   └── src/                    # Source components
+├── Urbanmobility/              # Backend Flask application
+│   ├── Backend/                # Core backend
 │   │   ├── __init__.py           # Flask app initialization
 │   │   ├── models.py             # Database models
 │   │   ├── routes.py             # API endpoints
 │   │   └── forms.py              # Form definitions
-│   └── 📁 templates/             # Jinja2 templates
-├── 📁 instance/                  # Database and runtime files
+│   └── templates/             # Jinja2 templates
+├── instance/                  # Database and runtime files
 │   ├── site.db                   # SQLite database
 │   ├── extract.py               # Data export utility
 │   └── urban_mobility_data.json # JSON data export
-├── 📁 tests/                     # Test files
+├── tests/                     # Test files
 ├── etl_script.py                # Main ETL pipeline
 ├── run.py                       # Application entry point
 ├── requirements.txt             # Python dependencies
