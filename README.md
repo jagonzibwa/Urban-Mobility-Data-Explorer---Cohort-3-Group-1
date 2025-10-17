@@ -1,16 +1,81 @@
------------------------------------------
+# 🚕 Urban Mobility Data Explorer
 
-Project: Data Explorer
+**Team:** Cohort 3 - Group 1
 
-Team: Group 1
+[![Demo Video](https://img.shields.io/badge/Demo-Watch%20on%20YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/_hH4Wj6GL3s)
 
------------------------------------------
+---
 
-Project Description: 
+## 📋 Project Description
 
+The **Urban Mobility Data Explorer** is a comprehensive full-stack web application designed to analyze and visualize urban transportation patterns using NYC Taxi trip data. This project demonstrates enterprise-level web development practices, combining robust backend processing with interactive frontend visualizations to deliver actionable insights into urban mobility trends.
 
+### Key Features
 
-----------------------------------------
+🔹 **Intelligent ETL Pipeline**
+- Automated data extraction, transformation, and loading from large CSV datasets
+- Schema-flexible processing supporting multiple taxi data formats (Yellow/Green cabs)
+- Memory-efficient chunk-based processing for datasets with millions of records
+- Automatic data validation, cleaning, and calculated metrics generation
+
+🔹 **Advanced Data Analytics**
+- Custom-built algorithms for performance optimization (no external algorithm libraries)
+- Percentile calculation using QuickSelect (O(n) complexity)
+- IQR-based outlier detection for identifying speed anomalies
+- Top-K selection using Min Heap for vendor performance ranking
+- Binary Search Tree for efficient range queries
+- Real-time statistical aggregations and insights
+
+🔹 **Interactive Visualizations**
+- **Trip Density Analysis**: Line charts showing hourly trip patterns with time-based filtering
+- **Duration Distribution**: Bar charts displaying trip duration breakdowns by passenger count
+- **Vendor Performance**: Comparative analytics of fare efficiency across vendors
+- **Geographic Heatmap**: Interactive Leaflet map with pickup/dropoff location clustering
+- Real-time dashboard with key performance indicators
+
+🔹 **RESTful API Architecture**
+- Well-structured API endpoints for data retrieval and analytics
+- JSON-based responses with proper error handling
+- Query parameter support for flexible data filtering
+- CORS-enabled for frontend integration
+
+🔹 **User Authentication & Security**
+- Flask-Login integration for secure user sessions
+- Bcrypt password hashing
+- Admin user management system
+- Protected routes and role-based access control
+
+🔹 **Responsive Web Interface**
+- Modern, mobile-friendly design
+- Dynamic chart updates using Chart.js
+- Interactive map controls with Leaflet
+- Real-time data filtering and visualization updates
+
+### Technical Highlights
+
+- **Backend**: Flask 3.1.2 with SQLAlchemy ORM
+- **Database**: SQLite with optimized indexes for fast queries
+- **Frontend**: Vanilla JavaScript with Chart.js and Leaflet
+- **Data Processing**: Pandas for ETL operations
+- **Algorithms**: 9 manually implemented data structures (QuickSelect, MinHeap, BST, Hash Table, etc.)
+- **Architecture**: MVC pattern with separation of concerns
+
+### Use Cases
+
+This application serves multiple stakeholders:
+
+- **Urban Planners**: Analyze traffic patterns to optimize infrastructure
+- **Transportation Services**: Understand demand patterns for resource allocation
+- **Data Analysts**: Explore mobility trends and generate insights
+- **Researchers**: Study urban mobility behavior and patterns
+- **Business Intelligence**: Monitor vendor performance and operational metrics
+
+### Demo
+
+Watch our comprehensive demo showcasing all features:
+**[🎥 View Demo on YouTube](https://youtu.be/_hH4Wj6GL3s)**
+
+---
 
 ## Initialise Database
 
