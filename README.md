@@ -4,7 +4,7 @@
 
 [Demo Video](https://youtu.be/_hH4Wj6GL3s)
 
-[View Full Documentation (PDF)](./docs/Urban-Mobility-Data-Explorer-Documentation.pdf)
+[Documentation (PDF)](./docs/Urban-Mobility-Data-Explorer-Documentation.pdf)
 
 ---
 
