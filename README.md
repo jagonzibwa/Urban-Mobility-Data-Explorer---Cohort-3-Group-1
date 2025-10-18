@@ -2,9 +2,9 @@
 
 **Team:** Cohort 3 - Group 1
 
-[[Demo Video](https://img.shields.io/badge/Demo-Watch%20on%20YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/_hH4Wj6GL3s)
+[![Demo Video](https://youtu.be/_hH4Wj6GL3s)
 
-[![Documentation](https://img.shields.io/badge/Documentation-View%20PDF-blue?style=for-the-badge&logo=adobeacrobatreader)](./docs/Urban-Mobility-Data-Explorer-Documentation.pdf)
+[View Full Documentation (PDF)](./docs/Urban-Mobility-Data-Explorer-Documentation.pdf)
 
 ---
 
