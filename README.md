@@ -2,7 +2,7 @@
 
 **Team:** Cohort 3 - Group 1
 
-[![Demo Video](https://youtu.be/_hH4Wj6GL3s)
+[Demo Video](https://youtu.be/_hH4Wj6GL3s)
 
 [View Full Documentation (PDF)](./docs/Urban-Mobility-Data-Explorer-Documentation.pdf)
 
@@ -10,7 +10,7 @@
 
 ## Project Description
 
-The **Urban Mobility Data Explorer** is a comprehensive full-stack web application designed to analyze and visualize urban transportation patterns using NYC Taxi trip data. This project demonstrates enterprise-level web development practices, combining robust backend processing with interactive frontend visualizations to deliver actionable insights into urban mobility trends.
+The **Urban Mobility Data Explorer** is a comprehensive full-stack web application designed to analyze and visualize urban transportation patterns using NYC Taxi trip data. This project demonstrates enterprise-level web development practices, combining robust backend processing with interactive frontend visualizations to deliver actionable insights into urban mobility trends. 
 
 ### Key Features
 
